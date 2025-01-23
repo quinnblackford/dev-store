@@ -2,9 +2,9 @@
 Exercise: Debug the Product Variant Selection Issues
 
 Bugs to find:
-1. Price not updating when variant is selected - check product-info data attributes (https://quickstart-dc8e271b.myshopify.com/products/selling-plans-ski-wax)
-2. Product media gallery not syncing with variant selection - investigate variant-media relationship (https://quickstart-dc8e271b.myshopify.com/products/selling-plans-ski-wax)
-3. Quantity selector allows invalid values - check input validation (https://quickstart-dc8e271b.myshopify.com/products/the-out-of-stock-snowboard)
+1. Price not updating when variant is selected - check product-info data attributes (https://quickstart-dc8e271b.myshopify.com/products/selling-plans-ski-wax)  {%comment%}Bug found on line 121, bool flag changed from false to true{%endcomment%}
+2. Product media gallery not syncing with variant selection - investigate variant-media relationship (https://quickstart-dc8e271b.myshopify.com/products/selling-plans-ski-wax)  {%comment%}Bug found on line 49 in media-gallery.js file. mediaid changed to mediaId{%endcomment%}
+3. Quantity selector allows invalid values - check input validation (https://quickstart-dc8e271b.myshopify.com/products/the-out-of-stock-snowboard)  {%comment%}Bug found on line 272, type was set to text, changed to number.{%endcomment%}
 
 Hint: Focus on the product__info-wrapper section and its data bindings
 {% endcomment %}
@@ -83,7 +83,7 @@ Hint: Focus on the product__info-wrapper section and its data bindings
       <div class="grid__item product__media-wrapper{% if section.settings.media_position == 'right' %} medium-hide large-up-hide{% endif %}">
         {% render 'product-media-gallery', variant_images: variant_images %}
       </div>
-      <div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
+      {%comment%}Beginning of product info wrapper section{%endcomment%}<div class="product__info-wrapper grid__item{% if settings.page_width > 1400 and section.settings.media_size == "small" %} product__info-wrapper--extra-padding{% endif %}{% if settings.animations_reveal_on_scroll %} scroll-trigger animate--slide-in{% endif %}">
         <product-info
           id="ProductInfo-{{ section.id }}"
           data-section="{{ section.id }}"
@@ -112,12 +112,13 @@ Hint: Focus on the product__info-wrapper section and its data bindings
                       {{ product.title | escape }}
                     </h2>
                   </a>
-                </div>
+                {%comment%}End of product inform wrapper section{%endcomment%}</div>
+                {%comment%}Price fluctuation bug is below in this section.{%endcomment%}
               {%- when 'price' -%}
                 <div class="no-js-hidden" id="price-{{ section.id }}" role="status" {{ block.shopify_attributes }}>
                   {%- render 'price',
                     product: product,
-                    use_variant: false,
+                    use_variant: true,                 
                     show_badges: true,
                     price_class: 'price--large'
                   -%}
@@ -138,7 +139,7 @@ Hint: Focus on the product__info-wrapper section and its data bindings
                 <div {{ block.shopify_attributes }}>
                   {%- assign product_form_installment_id = 'product-form-installment-' | append: section.id -%}
                   {%- form 'product', product, id: product_form_installment_id, class: 'installment caption-large' -%}
-                    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+                    {%comment%}First input validation mentioned.{%endcomment%}<input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
                     {{ form | payment_terms }}
                   {%- endform -%}
                 </div>
@@ -234,6 +235,7 @@ Hint: Focus on the product__info-wrapper section and its data bindings
                   </details>
                 </div>
               {%- when 'quantity_selector' -%}
+              {%comment%}Second time input mentioned.{%endcomment%}
                 <div
                   id="Quantity-Form-{{ section.id }}"
                   class="product-form__input product-form__quantity{% if settings.inputs_shadow_vertical_offset != 0 and settings.inputs_shadow_vertical_offset < 0 %} product-form__quantity-top{% endif %}"
@@ -264,9 +266,10 @@ Hint: Focus on the product__info-wrapper section and its data bindings
                         </span>
                         {% render 'icon-minus' %}
                       </button>
+                      {%comment%}This is the input valiadation linked to the quantity box{%endcomment%}
                       <input
                         class="quantity__input"
-                        type="text"
+                        type="number"  {%comment%}This is causing the bug, it was set to text instead of number{%endcomment%}
                         name="quantity"
                         id="Quantity-{{ section.id }}"
                         data-cart-quantity="{{ cart_qty }}"
@@ -279,6 +282,7 @@ Hint: Focus on the product__info-wrapper section and its data bindings
                         step="{{ product.selected_or_first_available_variant.quantity_rule.increment }}"
                         value="{{ product.selected_or_first_available_variant.quantity_rule.min }}"
                         form="{{ product_form_id }}"
+                        oninput="this.value = Math.floor(this.value);" {%comment%} Simple solution added to prevent decimal values from being entered{%endcomment%}
                       >
                       <button class="quantity__button no-js-hidden" name="plus" type="button">
                         <span class="visually-hidden">

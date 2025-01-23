@@ -43,10 +43,10 @@ if (!customElements.get("media-gallery")) {
         );
         this.setActiveThumbnail(thumbnail);
       }
-
+      //The second bug is in this area.
       setActiveMedia(mediaId, prepend) {
         const activeMedia = this.elements.viewer.querySelector(
-          `[data-media-id="${mediaid}"]`
+          `[data-media-id="${mediaId}"]` //<--- this line mediaId was spelled as mediaid
         );
         this.elements.viewer
           .querySelectorAll("[data-media-id]")
